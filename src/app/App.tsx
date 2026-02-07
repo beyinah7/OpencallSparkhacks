@@ -1017,6 +1017,7 @@ const Shortlist = ({ items, onUpdateItem, onChat, onSelectTalent, onOpenSearch, 
                     {[1, 2, 3, 4, 5].map(star => (
                       <button 
                         key={star}
+<<<<<<< HEAD
                         type="button"
                         onClick={() => onUpdateItem(talent.id, { userRating: star })}
                         className={cn("w-6 h-6 transition-transform hover:scale-110",
@@ -1031,6 +1032,12 @@ const Shortlist = ({ items, onUpdateItem, onChat, onSelectTalent, onOpenSearch, 
                              ? "fill-current"
                              : "fill-none" )}
                         />
+=======
+                        onClick={() => onUpdateItem(talent.id, { userRating: star })}
+                        className={cn("w-6 h-6", (talent.userRating || 0) >= star ? "text-[#D4AF37] fill-current" : "text-white/20")}
+                      >
+                        <Star className="w-full h-full" />
+>>>>>>> c1a05dacefde274957bc982e5b2c7e3d71267fc6
                       </button>
                     ))}
                   </div>
@@ -1038,12 +1045,15 @@ const Shortlist = ({ items, onUpdateItem, onChat, onSelectTalent, onOpenSearch, 
                     placeholder="Write a private note about your experience..."
                     value={talent.userReview || ''}
                     onChange={(e) => onUpdateItem(talent.id, { userReview: e.target.value })}
+<<<<<<< HEAD
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && !e.shiftKey) {
                         e.preventDefault();             
                         alert("Rating submitted ✅");
                       }
                     }}
+=======
+>>>>>>> c1a05dacefde274957bc982e5b2c7e3d71267fc6
                     className="w-full bg-black/40 border border-[#D4AF37]/20 rounded p-2 text-white/80 text-xs outline-none"
                   />
                 </motion.div>
