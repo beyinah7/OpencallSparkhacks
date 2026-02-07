@@ -28,7 +28,24 @@ import {
   LogOut,
   Send,
   MoreVertical,
-  ThumbsUp
+  ThumbsUp,
+  Ghost,
+  Laugh,
+  Sparkles,
+  Zap,
+  Rocket,
+  Skull,
+  Upload,
+  FileText,
+  Image as ImageIcon,
+  Video,
+  Feather,
+  Drama,
+  Smile,
+  Swords,
+  Radar,
+  Flame,
+  Music
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -43,6 +60,14 @@ type ViewState = 'splash' | 'onboarding' | 'feed' | 'profile' | 'shortlist' | 'a
 
 type Role = 'talent' | 'crew' | 'producer';
 
+interface PortfolioItem {
+  id: string;
+  type: 'image' | 'video' | 'document';
+  url: string;
+  title: string;
+  description?: string;
+}
+
 interface UserProfile {
   name: string;
   role: Role;
@@ -54,6 +79,14 @@ interface UserProfile {
   reelUrl?: string;
   contactEmail?: string;
   avatar?: string;
+  portfolio?: PortfolioItem[];
+}
+
+interface MovieCredit {
+  title: string;
+  description?: string;
+  year?: string;
+  role?: string;
 }
 
 interface Talent {
@@ -62,7 +95,7 @@ interface Talent {
   role: string;
   image: string;
   distance: string;
-  credits: string[];
+  credits: string[] | MovieCredit[];
   reelUrl?: string;
   bio?: string;
   skills?: string[];
@@ -73,6 +106,7 @@ interface Talent {
   workedWithUser?: boolean; // For shortlist
   userRating?: number;
   userReview?: string;
+  userRatingCount?: number; // For calculating averages
 }
 
 interface Message {
@@ -194,6 +228,98 @@ const FilmFrame = ({ children, className, orientation = 'horizontal' }: { childr
 
 // --- Screens ---
 
+const Welcome = ({ onContinue }: { onContinue: () => void }) => {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  
+  const slides = [
+    {
+      icon: <Clapperboard className="w-20 h-20 text-[#D4AF37]" />,
+      title: "Welcome to OpenCall",
+      description: "The premier platform connecting talent and creators in the film industry"
+    },
+    {
+      icon: <Star className="w-20 h-20 text-[#D4AF37]" />,
+      title: "Discover Top Talent",
+      description: "Browse verified actors, crew members, and industry professionals ready for your next project"
+    },
+    {
+      icon: <Heart className="w-20 h-20 text-[#D4AF37]" />,
+      title: "Make Connections",
+      description: "Shortlist candidates, chat directly, and build your perfect production team"
+    },
+    {
+      icon: <Film className="w-20 h-20 text-[#D4AF37]" />,
+      title: "Create Magic",
+      description: "From indie films to major productions, find the perfect match for every role"
+    }
+  ];
+
+  return (
+    <div className="relative h-screen w-full overflow-hidden bg-[#1a0505] flex flex-col">
+      <div 
+        className="absolute inset-0 bg-cover bg-center opacity-20 z-0"
+        style={{ backgroundImage: `url('https://images.unsplash.com/photo-1754915281161-d16814dbb60f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxyZWQlMjB2ZWx2ZXQlMjBjdXJ0YWluJTIwdGV4dHVyZSUyMGJhY2tncm91bmR8ZW58MXx8fHwxNzcwNDgyMjgxfDA&ixlib=rb-4.1.0&q=80&w=1080')` }}
+      />
+      
+      <div className="flex-1 flex items-center justify-center p-6 relative z-10">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentSlide}
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -50 }}
+            className="text-center max-w-md"
+          >
+            <div className="mb-8 flex justify-center">
+              {slides[currentSlide].icon}
+            </div>
+            <h2 className="font-serif text-4xl text-[#D4AF37] mb-4 drop-shadow-lg">
+              {slides[currentSlide].title}
+            </h2>
+            <p className="text-white/80 text-lg leading-relaxed">
+              {slides[currentSlide].description}
+            </p>
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      <div className="p-8 relative z-10">
+        <div className="flex justify-center gap-2 mb-6">
+          {slides.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrentSlide(i)}
+              className={cn(
+                "h-2 rounded-full transition-all",
+                i === currentSlide ? "w-8 bg-[#D4AF37]" : "w-2 bg-white/30"
+              )}
+            />
+          ))}
+        </div>
+        
+        {currentSlide < slides.length - 1 ? (
+          <Button onClick={() => setCurrentSlide(currentSlide + 1)} className="w-full">
+            Next
+          </Button>
+        ) : (
+          <Button onClick={onContinue} className="w-full">
+            Get Started
+          </Button>
+        )}
+        
+        {currentSlide < slides.length - 1 && (
+          <button 
+            onClick={onContinue}
+            className="w-full mt-4 text-[#D4AF37]/60 hover:text-[#D4AF37] text-sm transition-colors"
+          >
+            Skip
+          </button>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const Splash = ({ onEnter }: { onEnter: () => void }) => {
   return (
     <div className="relative h-screen w-full overflow-hidden bg-[#1a0505] flex flex-col items-center justify-center">
@@ -241,7 +367,7 @@ const Onboarding = ({ onComplete }: { onComplete: (data: any) => void }) => {
   const handleNext = (key: string, value: any) => {
     const newData = { ...data, [key]: value };
     setData(newData);
-    if (step < 2) {
+    if (step < 1) {
       setStep(step + 1);
     } else {
       onComplete(newData);
@@ -265,8 +391,8 @@ const Onboarding = ({ onComplete }: { onComplete: (data: any) => void }) => {
         <div className="absolute top-0 left-0 w-full h-1 bg-[#800000]">
           <motion.div 
             className="h-full bg-[#D4AF37]" 
-            initial={{ width: `${(step / 3) * 100}%` }}
-            animate={{ width: `${((step + 1) / 3) * 100}%` }}
+            initial={{ width: `${(step / 2) * 100}%` }}
+            animate={{ width: `${((step + 1) / 2) * 100}%` }}
           />
         </div>
 
@@ -289,28 +415,6 @@ const Onboarding = ({ onComplete }: { onComplete: (data: any) => void }) => {
         )}
 
         {step === 1 && (
-          <div className="flex flex-col gap-4">
-            <h2 className="text-3xl font-serif text-[#D4AF37] mb-2 text-center">Location</h2>
-            <p className="text-white/60 text-center mb-6 text-sm">We use your location to find local castings.</p>
-            <div className="flex items-center gap-2 p-3 border-b border-[#D4AF37] text-white">
-              <MapPin className="text-[#D4AF37]" />
-              <input 
-                type="text" 
-                placeholder="Los Angeles, CA" 
-                className="bg-transparent outline-none w-full placeholder-white/30"
-                autoFocus
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleNext('location', (e.target as HTMLInputElement).value || 'Los Angeles, CA');
-                }}
-              />
-            </div>
-            <Button onClick={() => handleNext('location', 'Los Angeles, CA')} className="mt-8 w-full">
-              Confirm
-            </Button>
-          </div>
-        )}
-
-        {step === 2 && (
           <div className="flex flex-col gap-4">
             <h2 className="text-3xl font-serif text-[#D4AF37] mb-6 text-center">Interests</h2>
             <div className="grid grid-cols-2 gap-3">
@@ -388,17 +492,6 @@ const TalentCard = ({ talent, onSwipe, onDetails }: { talent: Talent, onSwipe: (
                 <MapPin className="w-3 h-3 mr-1" />
                 {talent.distance}
               </div>
-              
-              {/* Connections Section - Removed Icon/Cleaned up */}
-              {talent.connections && talent.connections.length > 0 && (
-                 <div className="mb-3">
-                   <p className="text-[#D4AF37] text-[10px] uppercase font-bold mb-1">In your circle</p>
-                   <div className="text-xs text-white/90">
-                     Worked with {talent.connections[0]}
-                     {talent.connections.length > 1 && ` +${talent.connections.length - 1} more`}
-                   </div>
-                 </div>
-              )}
 
               <p className="text-white/70 text-sm line-clamp-2 mb-3 font-light italic">
                 "{talent.bio}"
@@ -487,7 +580,7 @@ const Feed = ({
     <div className="h-full w-full relative overflow-hidden flex flex-col bg-[#1a0505]">
       {/* Header */}
       <div className="h-16 flex items-center justify-between px-4 border-b border-[#D4AF37]/20 bg-[#1a0505] z-30">
-        <h2 className="text-[#D4AF37] font-serif text-xl tracking-widest">CASTING CALL</h2>
+        <h2 className="text-[#D4AF37] font-serif text-xl tracking-widest">OPEN CALL</h2>
         <div className="flex gap-4">
           <button onClick={onOpenSearch}>
             <Search className="text-[#D4AF37]/60 w-5 h-5 hover:text-[#D4AF37] transition-colors cursor-pointer" />
@@ -545,7 +638,7 @@ const Feed = ({
   );
 };
 
-const Profile = ({ user, onUpdateUser }: { user: UserProfile, onUpdateUser: (u: UserProfile) => void }) => {
+const Profile = ({ user, onUpdateUser, onOpenSearch, onOpenChat, onOpenSettings }: { user: UserProfile, onUpdateUser: (u: UserProfile) => void, onOpenSearch: () => void, onOpenChat: () => void, onOpenSettings: () => void }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState(user);
 
@@ -554,8 +647,38 @@ const Profile = ({ user, onUpdateUser }: { user: UserProfile, onUpdateUser: (u: 
     setIsEditing(false);
   };
 
+  const handleAddPortfolio = (type: 'image' | 'video' | 'document') => {
+    const newItem: PortfolioItem = {
+      id: Math.random().toString(36).substr(2, 9),
+      type,
+      url: 'https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&q=80&w=1000',
+      title: `New ${type}`,
+      description: 'Sample portfolio item'
+    };
+    setEditForm({
+      ...editForm,
+      portfolio: [...(editForm.portfolio || []), newItem]
+    });
+  };
+
   return (
     <div className="h-full w-full overflow-y-auto bg-[#1a0505] pb-20">
+      {/* Header with Icons */}
+      <div className="sticky top-0 z-30 h-14 flex items-center justify-between px-4 bg-[#1a0505]/95 backdrop-blur-sm border-b border-[#D4AF37]/20">
+        <h2 className="text-[#D4AF37] font-serif text-lg">MY PROFILE</h2>
+        <div className="flex gap-4">
+          <button onClick={onOpenSearch}>
+            <Search className="text-[#D4AF37]/60 w-5 h-5 hover:text-[#D4AF37] transition-colors cursor-pointer" />
+          </button>
+          <button onClick={onOpenChat}>
+            <MessageCircle className="text-[#D4AF37]/60 w-5 h-5 hover:text-[#D4AF37] transition-colors cursor-pointer" />
+          </button>
+          <button onClick={onOpenSettings}>
+            <Settings className="text-[#D4AF37]/60 w-5 h-5 hover:text-[#D4AF37] transition-colors cursor-pointer" />
+          </button>
+        </div>
+      </div>
+
       <div className="relative h-72">
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1614115866447-c9a299154650?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxob2xseXdvb2QlMjByZWQlMjBjYXJwZXQlMjBzcG90bGlnaHR8ZW58MXx8fHwxNzcwNDgyMjgxfDA&ixlib=rb-4.1.0&q=80&w=1080')] bg-cover bg-center opacity-30" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#1a0505] via-[#1a0505]/50 to-transparent" />
@@ -693,11 +816,19 @@ const Profile = ({ user, onUpdateUser }: { user: UserProfile, onUpdateUser: (u: 
   );
 };
 
-const ChatList = ({ chats, onSelectChat }: { chats: Chat[], onSelectChat: (chatId: string) => void }) => {
+const ChatList = ({ chats, onSelectChat, onOpenSearch, onOpenSettings }: { chats: Chat[], onSelectChat: (chatId: string) => void, onOpenSearch: () => void, onOpenSettings: () => void }) => {
   return (
     <div className="h-full w-full bg-[#1a0505] flex flex-col">
-       <div className="h-16 flex items-center justify-center border-b border-[#D4AF37]/20 bg-[#0a0202]">
+       <div className="h-16 flex items-center justify-between px-4 border-b border-[#D4AF37]/20 bg-[#0a0202]">
         <h2 className="text-[#D4AF37] font-serif text-xl tracking-widest">MESSAGES</h2>
+        <div className="flex gap-4">
+          <button onClick={onOpenSearch}>
+            <Search className="text-[#D4AF37]/60 w-5 h-5 hover:text-[#D4AF37] transition-colors cursor-pointer" />
+          </button>
+          <button onClick={onOpenSettings}>
+            <Settings className="text-[#D4AF37]/60 w-5 h-5 hover:text-[#D4AF37] transition-colors cursor-pointer" />
+          </button>
+        </div>
       </div>
       <div className="flex-1 overflow-y-auto p-4">
         {chats.length === 0 ? (
@@ -813,11 +944,22 @@ const ChatDetail = ({ chat, onBack, onSendMessage }: { chat: Chat, onBack: () =>
   );
 };
 
-const Shortlist = ({ items, onUpdateItem, onChat, onSelectTalent }: { items: Talent[], onUpdateItem: (id: string, updates: Partial<Talent>) => void, onChat: (id: string) => void, onSelectTalent: (talent: Talent) => void }) => {
+const Shortlist = ({ items, onUpdateItem, onChat, onSelectTalent, onOpenSearch, onOpenChat, onOpenSettings }: { items: Talent[], onUpdateItem: (id: string, updates: Partial<Talent>) => void, onChat: (id: string) => void, onSelectTalent: (talent: Talent) => void, onOpenSearch: () => void, onOpenChat: () => void, onOpenSettings: () => void }) => {
   return (
     <div className="h-full w-full bg-[#1a0505] flex flex-col">
-      <div className="h-16 flex items-center justify-center border-b border-[#D4AF37]/20 bg-[#0a0202]">
+      <div className="h-16 flex items-center justify-between px-4 border-b border-[#D4AF37]/20 bg-[#0a0202]">
         <h2 className="text-[#D4AF37] font-serif text-xl tracking-widest">SHORTLIST</h2>
+        <div className="flex gap-4">
+          <button onClick={onOpenSearch}>
+            <Search className="text-[#D4AF37]/60 w-5 h-5 hover:text-[#D4AF37] transition-colors cursor-pointer" />
+          </button>
+          <button onClick={onOpenChat}>
+            <MessageCircle className="text-[#D4AF37]/60 w-5 h-5 hover:text-[#D4AF37] transition-colors cursor-pointer" />
+          </button>
+          <button onClick={onOpenSettings}>
+            <Settings className="text-[#D4AF37]/60 w-5 h-5 hover:text-[#D4AF37] transition-colors cursor-pointer" />
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -1059,16 +1201,27 @@ export default function App() {
                     onUpdateItem={handleUpdateShortlistItem}
                     onChat={handleStartChat}
                     onSelectTalent={setSelectedTalent}
+                    onOpenSearch={() => setView('search')}
+                    onOpenChat={() => setView('chat')}
+                    onOpenSettings={() => setView('settings')}
                   />
                 )}
                 {view === 'chat' && (
                   <ChatList 
                     chats={chats} 
                     onSelectChat={(id) => { setSelectedChatId(id); setView('chat-detail'); }} 
+                    onOpenSearch={() => setView('search')}
+                    onOpenSettings={() => setView('settings')}
                   />
                 )}
                 {view === 'profile' && user && (
-                  <Profile user={user} onUpdateUser={setUser} />
+                  <Profile 
+                    user={user} 
+                    onUpdateUser={setUser} 
+                    onOpenSearch={() => setView('search')}
+                    onOpenChat={() => setView('chat')}
+                    onOpenSettings={() => setView('settings')}
+                  />
                 )}
              </div>
 
@@ -1256,7 +1409,16 @@ const SearchView = ({ onClose }: { onClose: () => void }) => {
     t.skills?.some(s => s.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  const genres = ['Drama', 'Horror', 'Comedy', 'Commercial', 'Indie', 'Sci-Fi', 'Action', 'Thriller'];
+  const genres = [
+    { name: 'Drama', icon: Drama },
+    { name: 'Horror', icon: Skull },
+    { name: 'Comedy', icon: Smile },
+    { name: 'Commercial', icon: Star },
+    { name: 'Indie', icon: Feather },
+    { name: 'Sci-Fi', icon: Rocket },
+    { name: 'Action', icon: Swords },
+    { name: 'Thriller', icon: Radar }
+  ];
 
   return (
     <div className="h-full w-full bg-[#1a0505] flex flex-col">
@@ -1287,7 +1449,7 @@ const SearchView = ({ onClose }: { onClose: () => void }) => {
               : "border-[#D4AF37]/30 text-[#D4AF37]/60 hover:border-[#D4AF37]"
           )}
         >
-          All
+          Skills
         </button>
         <button 
           onClick={() => setActiveFilter('people')}
@@ -1316,17 +1478,20 @@ const SearchView = ({ onClose }: { onClose: () => void }) => {
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {activeFilter === 'genres' && (
           <div className="grid grid-cols-2 gap-3">
-            {genres.map((genre) => (
-              <motion.button
-                key={genre}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="p-4 bg-black/40 border border-[#D4AF37]/30 rounded-lg hover:border-[#D4AF37] transition-colors text-center"
-              >
-                <Film className="w-6 h-6 text-[#D4AF37] mx-auto mb-2" />
-                <p className="text-white font-serif">{genre}</p>
-              </motion.button>
-            ))}
+            {genres.map((genre) => {
+              const GenreIcon = genre.icon;
+              return (
+                <motion.button
+                  key={genre.name}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="p-4 bg-black/40 border border-[#D4AF37]/30 rounded-lg hover:border-[#D4AF37] transition-colors text-center"
+                >
+                  <GenreIcon className="w-6 h-6 text-[#D4AF37] mx-auto mb-2" />
+                  <p className="text-white font-serif">{genre.name}</p>
+                </motion.button>
+              );
+            })}
           </div>
         )}
 
